@@ -1,15 +1,14 @@
 package com.devPilot.backend.service;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Service;
-
-import com.devPilot.backend.repository.UserRepository;
-
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.devPilot.backend.entity.User;
+import com.devPilot.backend.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +16,30 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor 
 public class UserService {
     public final UserRepository userRepository;
-    public final TextEncryptor textEncryptor;
+    public final TextEncryptor tokenEncryptor;
+
+    @Transactional
+    public User upsertFromGitHub(Map<String, Object> attributes, String accessToken, String scopes) {
+        Long githubId = toLong(attributes.get("id"));
+        String login = String.valueOf(attributes.get("login"));
+        String name = attributes.get("name") != null
+                ? String.valueOf(attributes.get("name"))
+                : login;
+        String avatarUrl = attributes.get("avatar_url") != null
+                ? String.valueOf(attributes.get("avatar_url"))
+                : null;
+
+        String encryptedToken = tokenEncryptor.encrypt(accessToken);
+
+        User user = userRepository.findByGithubId(githubId).orElseGet(User::new);
+        user.setGithubId(githubId);
+        user.setGithubUsername(login);
+        user.setDisplayName(name);
+        user.setAvatarUrl(avatarUrl);
+        user.setAccessToken(encryptedToken);
+        user.setTokenScopes(scopes);
+        return userRepository.save(user);
+    }
 
     @Transactional(readOnly = true)
     public User requiredById(UUID id) {
@@ -26,7 +48,7 @@ public class UserService {
     }
 
     public String decryptAccessToken(User user) {
-        return textEncryptor.decrypt(user.getAccessToken());
+        return tokenEncryptor.decrypt(user.getAccessToken());
     }
 
     private static Long toLong(Object value) {

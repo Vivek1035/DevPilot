@@ -44,8 +44,8 @@ public class User {
     @Column(name = "access_token", nullable = false, columnDefinition = "TEXT")
     private String accessToken;
 
-    @Column(name = "refresh_token", length = 500)
-    private String tokenScope;
+    @Column(name = "token_scopes", length = 500)
+    private String tokenScopes;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
