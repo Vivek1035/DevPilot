@@ -1,5 +1,6 @@
 package com.devPilot.backend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -14,6 +15,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 
 import com.devPilot.backend.security.GithubOAuth2UserService;
 
@@ -67,5 +70,27 @@ public class SecurityConfig {
                         .deleteCookies("DEV_SESSION"));
 
         return http.build();
+    }
+
+    /**
+     * Redirects to the frontend /auth/callback page after successful GitHub login.
+     * alwaysUseDefaultTargetUrl=true ensures we always go to the frontend,
+     * never to a saved backend request URL.
+     */
+    @Bean
+    AuthenticationSuccessHandler oauth2SuccessHandler(
+            @Value("${app.frontend-url}") String frontendUrl) {
+        SimpleUrlAuthenticationSuccessHandler handler = new SimpleUrlAuthenticationSuccessHandler();
+        handler.setDefaultTargetUrl(frontendUrl + "/auth/callback");
+        handler.setAlwaysUseDefaultTargetUrl(true);
+        return handler;
+    }
+
+    @Bean
+    AuthenticationFailureHandler oauth2FailureHandler(
+            @Value("${app.frontend-url}") String frontendUrl) {
+        SimpleUrlAuthenticationFailureHandler handler = new SimpleUrlAuthenticationFailureHandler();
+        handler.setDefaultFailureUrl(frontendUrl + "/login?error=oauth_failed");
+        return handler;
     }
 }

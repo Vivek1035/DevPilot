@@ -37,7 +37,9 @@ export async function apiFetch<T>(
   path: string,
   init?: RequestInit
 ): Promise<T> {
-  const res = await fetch(`${getApiBaseUrl()}${path}`, {
+  // Use relative URL so Next.js proxy forwards it to the backend on the same origin.
+  // This ensures SameSite=Lax cookies are sent correctly from the browser.
+  const res = await fetch(path, {
     ...init,
     credentials: "include",
     headers: {
