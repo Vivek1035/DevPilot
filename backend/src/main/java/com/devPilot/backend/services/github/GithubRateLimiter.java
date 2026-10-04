@@ -1,4 +1,4 @@
-package com.devPilot.backend.service.github;
+package com.devPilot.backend.services.github;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

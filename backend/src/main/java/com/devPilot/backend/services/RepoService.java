@@ -1,4 +1,4 @@
-package com.devPilot.backend.service;
+package com.devPilot.backend.services;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import com.devPilot.backend.entity.Repository;
 import com.devPilot.backend.entity.User;
 import com.devPilot.backend.exceptions.NotFoundException;
 import com.devPilot.backend.repository.RepositoryRepository;
-import com.devPilot.backend.service.github.GithubApiClient;
+import com.devPilot.backend.services.github.GithubApiClient;
 
 import lombok.RequiredArgsConstructor;
 

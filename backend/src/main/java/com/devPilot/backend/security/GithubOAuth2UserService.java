@@ -8,7 +8,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import com.devPilot.backend.entity.User;
-import com.devPilot.backend.service.UserService;
+import com.devPilot.backend.services.UserService;
+
 import lombok.RequiredArgsConstructor;
 
 @Service 
