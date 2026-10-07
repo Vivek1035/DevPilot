@@ -19,7 +19,6 @@ import com.devPilot.backend.exceptions.BadRequestException;
 import com.devPilot.backend.exceptions.NotFoundException;
 import com.devPilot.backend.repository.ChatMessageRepository;
 import com.devPilot.backend.repository.ChatSessionRepository;
-import com.devPilot.backend.services.ai.ChatPromptBuilder;
 import com.devPilot.backend.services.ai.ChatStreamHandler;
 import com.devPilot.backend.services.ai.CitationMapper;
 import com.devPilot.backend.services.ai.CodeContextRetriever;
@@ -29,8 +28,8 @@ import lombok.RequiredArgsConstructor;
  * Chat sessions and the RAG chat pipeline entry point.
  *
  * <p>{@link #streamReply} orchestrates the full flow:
- * validate → save user message → retrieve code context → build prompts → stream AI reply.
- * Each step is implemented in a dedicated class under {@code service.ai}.
+ * validate → save user message → then hands off to {@link ChatStreamHandler}
+ * which performs RAG retrieval, prompt building, and Gemini streaming off the request thread.
  */
 @Service
 @RequiredArgsConstructor
@@ -40,7 +39,6 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final RepoService repoService;
     private final CodeContextRetriever codeContextRetriever;
-    private final ChatPromptBuilder chatPromptBuilder;
     private final ChatStreamHandler chatStreamHandler;
     private final CitationMapper citationMapper;
 
@@ -103,20 +101,12 @@ public class ChatService {
                 .content(userContent)
                 .build());
 
-        // 3. RAG retrieval — find code chunks similar to the question
-        var retrievedContext = codeContextRetriever.retrieve(repo.getId(), userContent);
-
-        // 4. Build LLM prompts from retrieved context + question
-        String systemPrompt = chatPromptBuilder.systemPrompt(repo.getFullName());
-        String userPrompt = chatPromptBuilder.userPrompt(retrievedContext.contextText(), userContent);
-
-        // 5. Stream OpenAI response to the client (SSE)
+        // 3. Stream Gemini response (RAG retrieval + AI generation happen off the request thread)
         return chatStreamHandler.stream(
                 session.getId(),
                 toMessageResponse(userMessage),
-                retrievedContext.citations(),
-                systemPrompt,
-                userPrompt);
+                () -> codeContextRetriever.retrieve(repo.getId(), userContent),
+                repo.getFullName());
     }
 
     private ChatSessionResponse toSessionResponse(ChatSession session) {

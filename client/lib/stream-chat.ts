@@ -15,7 +15,7 @@ export async function streamChatMessage(
   handlers: StreamChatHandlers = {}
 ): Promise<void> {
   const res = await fetch(
-    `${getApiBaseUrl()}/api/chat/sessions/${sessionId}/messages`,
+    `/api/chat/sessions/${sessionId}/messages`,
     {
       method: "POST",
       credentials: "include",
@@ -79,6 +79,15 @@ export async function streamChatMessage(
           handlers.onAssistantMessage?.(JSON.parse(data) as ChatMessage);
         } else if (event === "done") {
           handlers.onDone?.();
+        } else if (event === "error") {
+          let errMsg = "AI stream error";
+          try {
+            const parsed = JSON.parse(data);
+            errMsg = parsed.error || parsed.message || errMsg;
+          } catch {
+            errMsg = data;
+          }
+          handlers.onError?.(new Error(errMsg));
         }
       } catch (err) {
         handlers.onError?.(
