@@ -1,0 +1,8 @@
+# Point your domain/subdomain (e.g. api.yourdomain.com) here
+
+api.yourdomain.com {
+    reverse_proxy backend:8080 {
+        # Keep SSE streaming connection unbuffered
+        flush_interval -1
+    }
+}
