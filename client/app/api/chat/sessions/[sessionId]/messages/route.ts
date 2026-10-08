@@ -27,6 +27,8 @@ export async function POST(
 
   const body = await req.text();
 
+  console.log(`[SSE Proxy] Forwarding chat stream for session ${sessionId} to ${BACKEND_URL}`);
+
   const backendRes = await fetch(
     `${BACKEND_URL}/api/chat/sessions/${sessionId}/messages`,
     {
@@ -37,6 +39,7 @@ export async function POST(
       },
       body,
       cache: "no-store",
+      signal: req.signal,
     }
   );
 

@@ -87,7 +87,9 @@ export async function streamChatMessage(
           } catch {
             errMsg = data;
           }
-          handlers.onError?.(new Error(errMsg));
+          const streamErr = new Error(errMsg);
+          handlers.onError?.(streamErr);
+          throw streamErr;
         }
       } catch (err) {
         handlers.onError?.(

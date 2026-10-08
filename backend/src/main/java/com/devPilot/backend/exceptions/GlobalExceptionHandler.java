@@ -35,6 +35,11 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, message);
     }
 
+    @ExceptionHandler(org.springframework.web.context.request.async.AsyncRequestNotUsableException.class)
+    void handleAsyncRequestNotUsable(Exception ex) {
+        // Client aborted/disconnected from SSE stream; connection closed, ignore
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
         return error(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage() != null ? ex.getMessage() : "Unexpected error");
